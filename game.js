@@ -210,10 +210,13 @@ function revealCellDOM(row, col, adjacentCount) {
   cell.classList.add("revealed");
   if (adjacentCount > 0) {
     cell.textContent = adjacentCount;
-    // Cells adjacent to the mega-mine always show their digit in red.
-    cell.style.color = isAdjacentToMegaMine(row, col)
-      ? "#d32f2f"
-      : DIGIT_COLORS[adjacentCount];
+    // Cells adjacent to the mega-mine always show their digit in red (inline override).
+    // All other cells use the CSS custom property via data-digit attribute.
+    if (isAdjacentToMegaMine(row, col)) {
+      cell.style.color = "#d32f2f";
+    } else {
+      cell.dataset.digit = adjacentCount;
+    }
   }
 }
 
@@ -265,9 +268,11 @@ function triggerMegaMineDetonation(megaRow, megaCol) {
         const adjacentCount = countAdjacentMines(nr, nc);
         if (adjacentCount > 0) {
           neighborCell.textContent = adjacentCount;
-          neighborCell.style.color = isAdjacentToMegaMine(nr, nc)
-            ? "#d32f2f"
-            : DIGIT_COLORS[adjacentCount];
+          if (isAdjacentToMegaMine(nr, nc)) {
+            neighborCell.style.color = "#d32f2f";
+          } else {
+            neighborCell.dataset.digit = adjacentCount;
+          }
         }
       }
     }
@@ -353,12 +358,23 @@ function revealCell(row, col) {
 
 /**
  * Update the mine counter display: total mines minus flags placed.
+ * Zero-pads to 3 digits; clamps to 0 on the low end.
  */
 function updateMineCounter() {
   const countEl = document.getElementById("mine-count");
   if (countEl) {
-    countEl.textContent = MINE_COUNT - state.flagged.size;
+    const remaining = Math.max(0, MINE_COUNT - state.flagged.size);
+    countEl.textContent = String(remaining).padStart(3, "0");
   }
+}
+
+/**
+ * Set the smiley button face.
+ * @param {"🙂"|"😮"|"😵"|"😎"} face
+ */
+function setSmiley(face) {
+  const btn = document.getElementById("smiley-btn");
+  if (btn) btn.textContent = face;
 }
 
 /**
@@ -536,6 +552,7 @@ function checkWin() {
  */
 function showWin() {
   stopTimer();
+  setSmiley("😎");
   const overlay = document.getElementById("game-over-overlay");
   const message = document.getElementById("game-over-message");
   if (!overlay || !message) return;
@@ -574,6 +591,7 @@ function showWin() {
  */
 function showGameOver(type) {
   stopTimer();
+  setSmiley("😵");
   const overlay = document.getElementById("game-over-overlay");
   const message = document.getElementById("game-over-message");
   if (!overlay || !message) return;
@@ -606,6 +624,7 @@ function newGame() {
   const overlay = document.getElementById("game-over-overlay");
   if (overlay) overlay.classList.add("hidden");
 
+  setSmiley("🙂");
   updateMineCounter();
   updateTimerDisplay();
   updateBestTimeDisplay();
@@ -614,5 +633,26 @@ function newGame() {
 
 // Wire up the "Play Again" button
 document.getElementById("play-again-btn").addEventListener("click", newGame);
+
+// Wire up the smiley button as a new-game reset
+document.getElementById("smiley-btn").addEventListener("click", newGame);
+
+// Smiley 😮 while mouse is held on a cell; reverts on release/leave
+const boardEl = document.getElementById("board");
+boardEl.addEventListener("mousedown", (e) => {
+  if (e.button === 0 && state.gameState === "playing") {
+    setSmiley("😮");
+  }
+});
+document.addEventListener("mouseup", () => {
+  if (state.gameState === "playing") {
+    setSmiley("🙂");
+  }
+});
+boardEl.addEventListener("mouseleave", () => {
+  if (state.gameState === "playing") {
+    setSmiley("🙂");
+  }
+});
 
 newGame();
