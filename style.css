@@ -52,3 +52,16 @@ h1 {
   cursor: default;
   user-select: none;
 }
+
+/* Revealed cell — flat, inset look with digit centred */
+.cell.revealed {
+  background-color: #bdbdbd;
+  border: 1px solid #808080;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: "Segoe UI", Arial, sans-serif;
+  cursor: default;
+}
