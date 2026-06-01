@@ -5,6 +5,9 @@ const ROWS = 16;
 const COLS = 16;
 const MINE_COUNT = 40;
 
+/** localStorage key for persisting the best (lowest) winning time. */
+const BEST_TIME_KEY = "minesweeper-the-bomb:best-time";
+
 /** Digit colors per standard Minesweeper convention. */
 const DIGIT_COLORS = {
   1: "#0000ff",
@@ -49,6 +52,40 @@ const state = {
  */
 function toIndex(row, col) {
   return row * COLS + col;
+}
+
+/**
+ * Read the best time from localStorage.
+ * @returns {number|null} Stored best time in seconds, or null if not set.
+ */
+function getBestTime() {
+  const stored = localStorage.getItem(BEST_TIME_KEY);
+  if (stored === null) return null;
+  const parsed = parseInt(stored, 10);
+  return isNaN(parsed) ? null : parsed;
+}
+
+/**
+ * Save a new best time to localStorage.
+ * @param {number} seconds
+ */
+function saveBestTime(seconds) {
+  localStorage.setItem(BEST_TIME_KEY, String(seconds));
+}
+
+/**
+ * Update the best-time display in the HUD.
+ * Shows "042s" format when a best time exists, or "--" if none.
+ */
+function updateBestTimeDisplay() {
+  const displayEl = document.getElementById("best-time-display");
+  if (!displayEl) return;
+  const best = getBestTime();
+  if (best === null) {
+    displayEl.textContent = "--";
+  } else {
+    displayEl.textContent = String(Math.min(best, 999)).padStart(3, "0") + "s";
+  }
 }
 
 /**
@@ -495,6 +532,7 @@ function checkWin() {
 /**
  * Display the win overlay.
  * Shows elapsed time and, if the mega-mine was flagged, the bonus message.
+ * Checks and updates the best time in localStorage.
  */
 function showWin() {
   stopTimer();
@@ -505,11 +543,22 @@ function showWin() {
   // Use the timer's elapsed seconds (already capped at 999)
   const elapsedSec = state.elapsedSeconds;
 
+  // Check and update best time
+  const prevBest = getBestTime();
+  const isNewRecord = prevBest === null || elapsedSec < prevBest;
+  if (isNewRecord) {
+    saveBestTime(elapsedSec);
+    updateBestTimeDisplay();
+  }
+
   const megaFlagged =
     state.megaMineIndex !== null &&
     state.flagged.has(state.megaMineIndex);
 
   let text = `You win! Time: ${elapsedSec}s`;
+  if (isNewRecord) {
+    text += "\nNew record!";
+  }
   if (megaFlagged) {
     text += "\n⭐ Big one found!";
   }
@@ -559,6 +608,7 @@ function newGame() {
 
   updateMineCounter();
   updateTimerDisplay();
+  updateBestTimeDisplay();
   renderBoard();
 }
 
