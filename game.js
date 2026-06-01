@@ -21,11 +21,13 @@ const DIGIT_COLORS = {
  * Game state.
  * mines: Set of cell indices (row * COLS + col) that contain mines.
  * revealed: Set of cell indices that have been revealed.
+ * flagged: Set of cell indices that have been flagged by the player.
  * firstClickDone: flag to ensure mines are placed only on the first click.
  */
 const state = {
   mines: new Set(),
   revealed: new Set(),
+  flagged: new Set(),
   firstClickDone: false,
 };
 
@@ -157,13 +159,57 @@ function revealCell(row, col) {
 }
 
 /**
+ * Update the mine counter display: total mines minus flags placed.
+ */
+function updateMineCounter() {
+  const countEl = document.getElementById("mine-count");
+  if (countEl) {
+    countEl.textContent = MINE_COUNT - state.flagged.size;
+  }
+}
+
+/**
+ * Handle a right-click (contextmenu) on a cell to toggle a flag.
+ * Flagging already-revealed cells does nothing.
+ * @param {Event} event
+ */
+function handleCellRightClick(event) {
+  event.preventDefault();
+  const cell = event.currentTarget;
+  const row = parseInt(cell.dataset.row, 10);
+  const col = parseInt(cell.dataset.col, 10);
+  const index = toIndex(row, col);
+
+  // Do nothing on already-revealed cells
+  if (state.revealed.has(index)) return;
+
+  if (state.flagged.has(index)) {
+    state.flagged.delete(index);
+    cell.textContent = "";
+    cell.classList.remove("flagged");
+  } else {
+    state.flagged.add(index);
+    cell.textContent = "🚩";
+    cell.classList.add("flagged");
+  }
+
+  updateMineCounter();
+}
+
+/**
  * Handle a left-click on a cell after mines have been placed.
+ * Flagged cells cannot be revealed by left-click.
  * @param {Event} event
  */
 function handleCellClick(event) {
   const cell = event.currentTarget;
   const row = parseInt(cell.dataset.row, 10);
   const col = parseInt(cell.dataset.col, 10);
+  const index = toIndex(row, col);
+
+  // Flagged cells cannot be accidentally revealed
+  if (state.flagged.has(index)) return;
+
   revealCell(row, col);
 }
 
@@ -171,6 +217,7 @@ function handleCellClick(event) {
  * Handle the first click on any cell.
  * Places mines (guaranteeing the clicked cell is safe) and marks
  * firstClickDone so subsequent clicks skip mine placement.
+ * Flagged cells are not triggerable as the first click.
  *
  * @param {Event} event
  */
@@ -179,6 +226,9 @@ function handleFirstClick(event) {
   const row = parseInt(cell.dataset.row, 10);
   const col = parseInt(cell.dataset.col, 10);
   const index = toIndex(row, col);
+
+  // Flagged cells cannot be revealed
+  if (state.flagged.has(index)) return;
 
   placeMines(index);
   state.firstClickDone = true;
@@ -210,8 +260,9 @@ function renderBoard() {
       cell.classList.add("cell");
       cell.dataset.row = row;
       cell.dataset.col = col;
-      // Wire up the first-click safety handler
+      // Wire up the first-click safety handler and right-click flag handler
       cell.addEventListener("click", handleFirstClick);
+      cell.addEventListener("contextmenu", handleCellRightClick);
       fragment.appendChild(cell);
     }
   }
@@ -226,7 +277,9 @@ function renderBoard() {
 function newGame() {
   state.mines = new Set();
   state.revealed = new Set();
+  state.flagged = new Set();
   state.firstClickDone = false;
+  updateMineCounter();
   renderBoard();
 }
 
