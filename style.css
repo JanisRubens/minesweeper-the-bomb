@@ -26,6 +26,24 @@ h1 {
   margin-bottom: 1.5rem;
 }
 
+/* Mine counter */
+.mine-counter {
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-family: "Courier New", Courier, monospace;
+  background-color: #c0c0c0;
+  border: 3px solid;
+  border-top-color: #808080;
+  border-left-color: #808080;
+  border-bottom-color: #ffffff;
+  border-right-color: #ffffff;
+  padding: 0.25rem 0.75rem;
+  width: max-content;
+  margin: 0 auto 0.75rem;
+  color: #ff0000;
+  letter-spacing: 0.05em;
+}
+
 /* Game board */
 .board {
   display: grid;
@@ -51,6 +69,15 @@ h1 {
   border-right-color: #808080;
   cursor: default;
   user-select: none;
+}
+
+/* Flagged cell — shows 🚩, keeps raised look */
+.cell.flagged {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: default;
 }
 
 /* Revealed cell — flat, inset look with digit centred */
