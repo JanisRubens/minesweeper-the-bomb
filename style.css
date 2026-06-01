@@ -23,4 +23,32 @@ h1 {
   font-size: 2rem;
   font-weight: 700;
   letter-spacing: -0.02em;
+  margin-bottom: 1.5rem;
+}
+
+/* Game board */
+.board {
+  display: grid;
+  grid-template-columns: repeat(16, 32px);
+  grid-template-rows: repeat(16, 32px);
+  gap: 0;
+  width: max-content;
+  margin: 0 auto;
+  border: 3px solid #808080;
+  border-top-color: #ffffff;
+  border-left-color: #ffffff;
+}
+
+/* Individual cell — classic 3D-raised unrevealed look */
+.cell {
+  width: 32px;
+  height: 32px;
+  background-color: #c0c0c0;
+  border: 2px solid;
+  border-top-color: #ffffff;
+  border-left-color: #ffffff;
+  border-bottom-color: #808080;
+  border-right-color: #808080;
+  cursor: default;
+  user-select: none;
 }
