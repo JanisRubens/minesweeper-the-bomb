@@ -1,0 +1,328 @@
+/* ============================================================
+   CSS custom properties — digit colors & minesweeper palette
+   ============================================================ */
+:root {
+  --digit-1: #0000ff;
+  --digit-2: #007b00;
+  --digit-3: #ff0000;
+  --digit-4: #00007b;
+  --digit-5: #7b0000;
+  --digit-6: #007b7b;
+  --digit-7: #000000;
+  --digit-8: #7b7b7b;
+
+  --ms-bg:       #c0c0c0;
+  --ms-light:    #ffffff;
+  --ms-mid:      #808080;
+  --ms-dark:     #404040;
+  --ms-red:      #ff0000;
+  --ms-font:     "Courier New", Courier, monospace;
+}
+
+/* ============================================================
+   CSS reset
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ============================================================
+   Page base
+   ============================================================ */
+body {
+  background-color: #008080; /* classic Win95 teal desktop */
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem;
+  font-family: var(--ms-font);
+}
+
+/* ============================================================
+   Window chrome (outer raised frame)
+   ============================================================ */
+.window-frame {
+  background-color: var(--ms-bg);
+  border: 3px solid;
+  border-top-color: var(--ms-light);
+  border-left-color: var(--ms-light);
+  border-bottom-color: var(--ms-dark);
+  border-right-color: var(--ms-dark);
+  padding: 3px;
+  display: inline-flex;
+  flex-direction: column;
+  user-select: none;
+}
+
+.title-bar {
+  background: linear-gradient(to right, #000080, #1084d0);
+  color: var(--ms-light);
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  margin-bottom: 3px;
+  letter-spacing: 0.04em;
+}
+
+.window-body {
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ============================================================
+   Header panel: mine counter | smiley | timer
+   ============================================================ */
+.header-panel {
+  background-color: var(--ms-bg);
+  border: 3px solid;
+  border-top-color: var(--ms-mid);
+  border-left-color: var(--ms-mid);
+  border-bottom-color: var(--ms-light);
+  border-right-color: var(--ms-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+}
+
+/* Segmented LED-style display (mine count + timer) */
+.segment-display {
+  background-color: #000;
+  border: 2px solid;
+  border-top-color: var(--ms-mid);
+  border-left-color: var(--ms-mid);
+  border-bottom-color: var(--ms-light);
+  border-right-color: var(--ms-light);
+  padding: 2px 4px;
+  min-width: 54px;
+  text-align: center;
+}
+
+.segment-display span {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ms-red);
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+/* Smiley button */
+.smiley-btn {
+  font-size: 1.4rem;
+  line-height: 1;
+  width: 36px;
+  height: 36px;
+  background-color: var(--ms-bg);
+  border: 3px solid;
+  border-top-color: var(--ms-light);
+  border-left-color: var(--ms-light);
+  border-bottom-color: var(--ms-mid);
+  border-right-color: var(--ms-mid);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.smiley-btn:active {
+  border-top-color: var(--ms-mid);
+  border-left-color: var(--ms-mid);
+  border-bottom-color: var(--ms-light);
+  border-right-color: var(--ms-light);
+}
+
+/* ============================================================
+   Board bezel (raised border around grid)
+   ============================================================ */
+.board-bezel {
+  border: 3px solid;
+  border-top-color: var(--ms-mid);
+  border-left-color: var(--ms-mid);
+  border-bottom-color: var(--ms-light);
+  border-right-color: var(--ms-light);
+  display: inline-flex;
+  line-height: 0;
+}
+
+/* Game board */
+.board {
+  display: grid;
+  grid-template-columns: repeat(16, 32px);
+  grid-template-rows: repeat(16, 32px);
+  gap: 0;
+  width: max-content;
+}
+
+/* ============================================================
+   Cells
+   ============================================================ */
+
+/* Unrevealed — classic 3D raised look */
+.cell {
+  width: 32px;
+  height: 32px;
+  background-color: var(--ms-bg);
+  border: 2px solid;
+  border-top-color: var(--ms-light);
+  border-left-color: var(--ms-light);
+  border-bottom-color: var(--ms-mid);
+  border-right-color: var(--ms-mid);
+  cursor: default;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+/* Hover on unrevealed (not flagged) */
+.cell:not(.revealed):not(.flagged):not(.mine-revealed):not(.mine-detonated):not(.mega-mine-revealed):not(.mega-mine-detonated):not(.wrong-flag):hover {
+  filter: brightness(1.06);
+}
+
+/* Flagged — 🚩, keeps raised look */
+.cell.flagged {
+  cursor: default;
+}
+
+/* Revealed — flat / sunken */
+.cell.revealed {
+  background-color: #bdbdbd;
+  border: 1px solid var(--ms-mid);
+  font-size: 14px;
+  font-weight: 700;
+  font-family: "Segoe UI", Arial, sans-serif;
+  cursor: default;
+}
+
+/* Digit color helpers via CSS custom properties */
+.cell.revealed[data-digit="1"] { color: var(--digit-1); }
+.cell.revealed[data-digit="2"] { color: var(--digit-2); }
+.cell.revealed[data-digit="3"] { color: var(--digit-3); }
+.cell.revealed[data-digit="4"] { color: var(--digit-4); }
+.cell.revealed[data-digit="5"] { color: var(--digit-5); }
+.cell.revealed[data-digit="6"] { color: var(--digit-6); }
+.cell.revealed[data-digit="7"] { color: var(--digit-7); }
+.cell.revealed[data-digit="8"] { color: var(--digit-8); }
+
+/* Mega-mine detonation: 💥 on vivid red */
+.cell.mega-mine-detonated {
+  background-color: #d32f2f;
+  border-color: #b71c1c;
+  font-size: 18px;
+}
+
+/* Neighbor mine detonated by chain reaction */
+.cell.mine-detonated {
+  background-color: #e57373;
+  border-color: #c62828;
+  font-size: 16px;
+}
+
+/* Unrevealed mine shown on game-over reveal */
+.cell.mine-revealed {
+  background-color: var(--ms-bg);
+  border: 1px solid var(--ms-mid);
+  font-size: 16px;
+  cursor: default;
+}
+
+/* Mega-mine revealed on game-over */
+.cell.mega-mine-revealed {
+  background-color: #d32f2f;
+  border-color: #b71c1c;
+  font-size: 20px;
+  cursor: default;
+}
+
+/* Incorrectly flagged cell on game-over reveal */
+.cell.wrong-flag {
+  background-color: #ffcdd2;
+  border: 1px solid var(--ms-mid);
+  font-size: 16px;
+  cursor: default;
+}
+
+/* ============================================================
+   Best time row
+   ============================================================ */
+.best-time-row {
+  text-align: center;
+  font-size: 0.85rem;
+  font-family: var(--ms-font);
+  color: #1a1a1a;
+  padding: 2px 0;
+}
+
+.best-time-label {
+  margin-right: 4px;
+}
+
+/* ============================================================
+   Game-over overlay
+   ============================================================ */
+.game-over-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.game-over-overlay.hidden {
+  display: none;
+}
+
+.game-over-box {
+  background-color: var(--ms-bg);
+  border: 4px solid;
+  border-top-color: var(--ms-light);
+  border-left-color: var(--ms-light);
+  border-bottom-color: var(--ms-mid);
+  border-right-color: var(--ms-mid);
+  padding: 2rem 2.5rem;
+  text-align: center;
+  max-width: 360px;
+  width: 90%;
+}
+
+.game-over-message {
+  font-size: 1.4rem;
+  font-weight: 700;
+  font-family: var(--ms-font);
+  color: #1a1a1a;
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+}
+
+.play-again-btn {
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: var(--ms-bg);
+  border: 3px solid;
+  border-top-color: var(--ms-light);
+  border-left-color: var(--ms-light);
+  border-bottom-color: var(--ms-mid);
+  border-right-color: var(--ms-mid);
+  padding: 0.4rem 1.25rem;
+  cursor: pointer;
+  color: #1a1a1a;
+}
+
+.play-again-btn:active {
+  border-top-color: var(--ms-mid);
+  border-left-color: var(--ms-mid);
+  border-bottom-color: var(--ms-light);
+  border-right-color: var(--ms-light);
+}
