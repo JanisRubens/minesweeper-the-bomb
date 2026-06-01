@@ -8,13 +8,32 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <h1>Minesweeper</h1>
-    <div class="hud">
-      <div id="mine-counter" class="mine-counter">💣 <span id="mine-count">40</span></div>
-      <div id="timer" class="timer">⏱ <span id="timer-display">000</span></div>
-      <div id="best-time" class="best-time">🏆 Best: <span id="best-time-display">--</span></div>
+    <div class="window-frame">
+      <div class="title-bar">Minesweeper</div>
+      <div class="window-body">
+        <!-- Header panel: mine counter | smiley | timer -->
+        <div class="header-panel">
+          <div class="segment-display" id="mine-counter">
+            <span id="mine-count">040</span>
+          </div>
+          <button class="smiley-btn" id="smiley-btn" aria-label="New game">🙂</button>
+          <div class="segment-display" id="timer-display-box">
+            <span id="timer-display">000</span>
+          </div>
+        </div>
+
+        <!-- Game board with bezel -->
+        <div class="board-bezel">
+          <div id="board" class="board"></div>
+        </div>
+
+        <!-- Best time row -->
+        <div class="best-time-row">
+          <span class="best-time-label">🏆 Best:</span>
+          <span id="best-time-display">--</span>
+        </div>
+      </div>
     </div>
-    <div id="board" class="board"></div>
 
     <!-- Game-over overlay (hidden by default) -->
     <div id="game-over-overlay" class="game-over-overlay hidden" role="dialog" aria-modal="true" aria-label="Game over">
