@@ -11,6 +11,15 @@
     <h1>Minesweeper</h1>
     <div id="mine-counter" class="mine-counter">💣 <span id="mine-count">40</span></div>
     <div id="board" class="board"></div>
+
+    <!-- Game-over overlay (hidden by default) -->
+    <div id="game-over-overlay" class="game-over-overlay hidden" role="dialog" aria-modal="true" aria-label="Game over">
+      <div class="game-over-box">
+        <p id="game-over-message" class="game-over-message"></p>
+        <button id="play-again-btn" class="play-again-btn">Play Again</button>
+      </div>
+    </div>
+
     <script type="module" src="game.js"></script>
   </body>
 </html>
