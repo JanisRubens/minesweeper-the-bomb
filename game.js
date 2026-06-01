@@ -24,6 +24,7 @@ const DIGIT_COLORS = {
  * revealed: Set of cell indices that have been revealed.
  * flagged: Set of cell indices that have been flagged by the player.
  * firstClickDone: flag to ensure mines are placed only on the first click.
+ * gameState: "playing" | "loss" | "big-explosion" | "win"
  */
 const state = {
   mines: new Set(),
@@ -31,6 +32,7 @@ const state = {
   revealed: new Set(),
   flagged: new Set(),
   firstClickDone: false,
+  gameState: "playing",
 };
 
 /**
@@ -134,6 +136,66 @@ function revealCellDOM(row, col, adjacentCount) {
 }
 
 /**
+ * Trigger the mega-mine chain reaction.
+ * Reveals the mega-mine cell itself with a 💥 icon and red background,
+ * then instantly reveals all 8 adjacent neighbors.
+ * Neighbor cells that contain mines are shown as detonated (💣) but do
+ * not trigger further chain reactions.
+ * Sets state.gameState to "big-explosion".
+ *
+ * @param {number} megaRow - row of the mega-mine
+ * @param {number} megaCol - col of the mega-mine
+ */
+function triggerMegaMineDetonation(megaRow, megaCol) {
+  // Mark the mega-mine cell itself
+  const megaCell = document.querySelector(
+    `.cell[data-row="${megaRow}"][data-col="${megaCol}"]`
+  );
+  if (megaCell) {
+    megaCell.classList.add("revealed", "mega-mine-detonated");
+    megaCell.textContent = "💥";
+  }
+  state.revealed.add(toIndex(megaRow, megaCol));
+
+  // Reveal all 8 neighbors simultaneously
+  for (let dr = -1; dr <= 1; dr++) {
+    for (let dc = -1; dc <= 1; dc++) {
+      if (dr === 0 && dc === 0) continue;
+      const nr = megaRow + dr;
+      const nc = megaCol + dc;
+      if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) continue;
+
+      const ni = toIndex(nr, nc);
+      const neighborCell = document.querySelector(
+        `.cell[data-row="${nr}"][data-col="${nc}"]`
+      );
+      if (!neighborCell) continue;
+
+      state.revealed.add(ni);
+      neighborCell.classList.add("revealed");
+
+      if (state.mines.has(ni)) {
+        // Neighbor is a mine — show as detonated, no further chain
+        neighborCell.classList.add("mine-detonated");
+        neighborCell.textContent = "💣";
+      } else {
+        // Normal cell — show adjacent mine count
+        const adjacentCount = countAdjacentMines(nr, nc);
+        if (adjacentCount > 0) {
+          neighborCell.textContent = adjacentCount;
+          neighborCell.style.color = isAdjacentToMegaMine(nr, nc)
+            ? "#d32f2f"
+            : DIGIT_COLORS[adjacentCount];
+        }
+      }
+    }
+  }
+
+  state.gameState = "big-explosion";
+  console.log("BIG EXPLOSION");
+}
+
+/**
  * Reveal the cell at (row, col).
  * - If it is already revealed, do nothing.
  * - If it is a mine, log "game over" to the console.
@@ -148,8 +210,18 @@ function revealCell(row, col) {
 
   if (state.revealed.has(index)) return;
 
+  // Ignore clicks if the game has already ended
+  if (state.gameState !== "playing") return;
+
   if (state.mines.has(index)) {
-    console.log("game over");
+    if (index === state.megaMineIndex) {
+      // Mega-mine clicked — trigger chain reaction detonation
+      triggerMegaMineDetonation(row, col);
+    } else {
+      // Regular mine — standard loss
+      state.gameState = "loss";
+      console.log("game over");
+    }
     return;
   }
 
@@ -304,6 +376,7 @@ function newGame() {
   state.revealed = new Set();
   state.flagged = new Set();
   state.firstClickDone = false;
+  state.gameState = "playing";
   updateMineCounter();
   renderBoard();
 }
