@@ -20,12 +20,14 @@ const DIGIT_COLORS = {
 /**
  * Game state.
  * mines: Set of cell indices (row * COLS + col) that contain mines.
+ * megaMineIndex: flat index of the single mega-mine (null before mines placed).
  * revealed: Set of cell indices that have been revealed.
  * flagged: Set of cell indices that have been flagged by the player.
  * firstClickDone: flag to ensure mines are placed only on the first click.
  */
 const state = {
   mines: new Set(),
+  megaMineIndex: null,
   revealed: new Set(),
   flagged: new Set(),
   firstClickDone: false,
@@ -68,6 +70,10 @@ function placeMines(firstClickIndex) {
   }
 
   state.mines = new Set(pool.slice(0, MINE_COUNT));
+
+  // Randomly designate one of the placed mines as the mega-mine.
+  const mineArray = Array.from(state.mines);
+  state.megaMineIndex = mineArray[Math.floor(Math.random() * mineArray.length)];
 }
 
 /**
@@ -92,7 +98,22 @@ function countAdjacentMines(row, col) {
 }
 
 /**
+ * Return true if the cell at (row, col) is adjacent to the mega-mine.
+ * @param {number} row
+ * @param {number} col
+ * @returns {boolean}
+ */
+function isAdjacentToMegaMine(row, col) {
+  if (state.megaMineIndex === null) return false;
+  const mr = Math.floor(state.megaMineIndex / COLS);
+  const mc = state.megaMineIndex % COLS;
+  return Math.abs(row - mr) <= 1 && Math.abs(col - mc) <= 1 &&
+    !(row === mr && col === mc);
+}
+
+/**
  * Reveal a single cell in the DOM, showing its adjacent mine count.
+ * Cells adjacent to the mega-mine display their digit in red (#d32f2f).
  * @param {number} row
  * @param {number} col
  * @param {number} adjacentCount
@@ -105,7 +126,10 @@ function revealCellDOM(row, col, adjacentCount) {
   cell.classList.add("revealed");
   if (adjacentCount > 0) {
     cell.textContent = adjacentCount;
-    cell.style.color = DIGIT_COLORS[adjacentCount];
+    // Cells adjacent to the mega-mine always show their digit in red.
+    cell.style.color = isAdjacentToMegaMine(row, col)
+      ? "#d32f2f"
+      : DIGIT_COLORS[adjacentCount];
   }
 }
 
@@ -276,6 +300,7 @@ function renderBoard() {
  */
 function newGame() {
   state.mines = new Set();
+  state.megaMineIndex = null;
   state.revealed = new Set();
   state.flagged = new Set();
   state.firstClickDone = false;
