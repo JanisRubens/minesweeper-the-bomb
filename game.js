@@ -25,6 +25,7 @@ const DIGIT_COLORS = {
  * flagged: Set of cell indices that have been flagged by the player.
  * firstClickDone: flag to ensure mines are placed only on the first click.
  * gameState: "playing" | "loss" | "big-explosion" | "win"
+ * startTime: timestamp (ms) when the first cell was clicked, or null.
  */
 const state = {
   mines: new Set(),
@@ -33,6 +34,7 @@ const state = {
   flagged: new Set(),
   firstClickDone: false,
   gameState: "playing",
+  startTime: null,
 };
 
 /**
@@ -264,6 +266,9 @@ function revealCell(row, col) {
       }
     }
   }
+
+  // Check for win after every successful reveal
+  checkWin();
 }
 
 /**
@@ -340,6 +345,7 @@ function handleFirstClick(event) {
 
   placeMines(index);
   state.firstClickDone = true;
+  state.startTime = Date.now();
 
   // Remove the one-time first-click listeners from every cell and wire up
   // the normal reveal handler.
@@ -424,6 +430,52 @@ function revealAllMines() {
 }
 
 /**
+ * Check whether the player has won.
+ * Win condition: every non-mine cell (ROWS*COLS - MINE_COUNT = 216) is revealed.
+ * If so, set gameState to "win" and show the win overlay.
+ */
+function checkWin() {
+  const nonMineCells = ROWS * COLS - MINE_COUNT; // 216
+  // Count revealed cells that are not mines
+  let revealedNonMines = 0;
+  state.revealed.forEach((idx) => {
+    if (!state.mines.has(idx)) revealedNonMines++;
+  });
+
+  if (revealedNonMines >= nonMineCells) {
+    state.gameState = "win";
+    showWin();
+  }
+}
+
+/**
+ * Display the win overlay.
+ * Shows elapsed time and, if the mega-mine was flagged, the bonus message.
+ */
+function showWin() {
+  const overlay = document.getElementById("game-over-overlay");
+  const message = document.getElementById("game-over-message");
+  if (!overlay || !message) return;
+
+  // Compute elapsed time
+  const elapsedMs = state.startTime ? Date.now() - state.startTime : 0;
+  const elapsedSec = Math.floor(elapsedMs / 1000);
+
+  const megaFlagged =
+    state.megaMineIndex !== null &&
+    state.flagged.has(state.megaMineIndex);
+
+  let text = `You win! Time: ${elapsedSec}s`;
+  if (megaFlagged) {
+    text += "\n⭐ Big one found!";
+  }
+
+  message.style.whiteSpace = "pre-line";
+  message.textContent = text;
+  overlay.classList.remove("hidden");
+}
+
+/**
  * Display the game-over overlay with the appropriate message.
  * @param {"loss"|"big-explosion"} type - which kind of game-over occurred
  */
@@ -452,6 +504,7 @@ function newGame() {
   state.flagged = new Set();
   state.firstClickDone = false;
   state.gameState = "playing";
+  state.startTime = null;
 
   // Hide the game-over overlay if it was showing
   const overlay = document.getElementById("game-over-overlay");
