@@ -69,6 +69,23 @@ h1 {
   letter-spacing: 0.05em;
 }
 
+/* Best time display */
+.best-time {
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-family: "Courier New", Courier, monospace;
+  background-color: #c0c0c0;
+  border: 3px solid;
+  border-top-color: #808080;
+  border-left-color: #808080;
+  border-bottom-color: #ffffff;
+  border-right-color: #ffffff;
+  padding: 0.25rem 0.75rem;
+  width: max-content;
+  color: #ff0000;
+  letter-spacing: 0.05em;
+}
+
 /* Game board */
 .board {
   display: grid;
