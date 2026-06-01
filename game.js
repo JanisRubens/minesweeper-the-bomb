@@ -26,6 +26,8 @@ const DIGIT_COLORS = {
  * firstClickDone: flag to ensure mines are placed only on the first click.
  * gameState: "playing" | "loss" | "big-explosion" | "win"
  * startTime: timestamp (ms) when the first cell was clicked, or null.
+ * timerInterval: setInterval ID for the elapsed timer, or null.
+ * elapsedSeconds: number of seconds elapsed since first click.
  */
 const state = {
   mines: new Set(),
@@ -35,6 +37,8 @@ const state = {
   firstClickDone: false,
   gameState: "playing",
   startTime: null,
+  timerInterval: null,
+  elapsedSeconds: 0,
 };
 
 /**
@@ -45,6 +49,45 @@ const state = {
  */
 function toIndex(row, col) {
   return row * COLS + col;
+}
+
+/**
+ * Update the timer display element with the current elapsed seconds.
+ * Caps at 999 and zero-pads to 3 digits.
+ */
+function updateTimerDisplay() {
+  const displayEl = document.getElementById("timer-display");
+  if (!displayEl) return;
+  const capped = Math.min(state.elapsedSeconds, 999);
+  displayEl.textContent = String(capped).padStart(3, "0");
+}
+
+/**
+ * Start the elapsed timer. Resets elapsedSeconds to 0 and starts a
+ * 1-second interval that increments and displays the count.
+ */
+function startTimer() {
+  state.elapsedSeconds = 0;
+  updateTimerDisplay();
+  state.timerInterval = setInterval(() => {
+    state.elapsedSeconds = Math.min(state.elapsedSeconds + 1, 999);
+    updateTimerDisplay();
+    // Auto-stop at cap to avoid unnecessary ticks
+    if (state.elapsedSeconds >= 999) {
+      clearInterval(state.timerInterval);
+      state.timerInterval = null;
+    }
+  }, 1000);
+}
+
+/**
+ * Stop the elapsed timer by clearing the active interval.
+ */
+function stopTimer() {
+  if (state.timerInterval !== null) {
+    clearInterval(state.timerInterval);
+    state.timerInterval = null;
+  }
 }
 
 /**
@@ -346,6 +389,7 @@ function handleFirstClick(event) {
   placeMines(index);
   state.firstClickDone = true;
   state.startTime = Date.now();
+  startTimer();
 
   // Remove the one-time first-click listeners from every cell and wire up
   // the normal reveal handler.
@@ -453,13 +497,13 @@ function checkWin() {
  * Shows elapsed time and, if the mega-mine was flagged, the bonus message.
  */
 function showWin() {
+  stopTimer();
   const overlay = document.getElementById("game-over-overlay");
   const message = document.getElementById("game-over-message");
   if (!overlay || !message) return;
 
-  // Compute elapsed time
-  const elapsedMs = state.startTime ? Date.now() - state.startTime : 0;
-  const elapsedSec = Math.floor(elapsedMs / 1000);
+  // Use the timer's elapsed seconds (already capped at 999)
+  const elapsedSec = state.elapsedSeconds;
 
   const megaFlagged =
     state.megaMineIndex !== null &&
@@ -480,6 +524,7 @@ function showWin() {
  * @param {"loss"|"big-explosion"} type - which kind of game-over occurred
  */
 function showGameOver(type) {
+  stopTimer();
   const overlay = document.getElementById("game-over-overlay");
   const message = document.getElementById("game-over-message");
   if (!overlay || !message) return;
@@ -498,6 +543,7 @@ function showGameOver(type) {
  * Mines will be placed fresh on the next first click.
  */
 function newGame() {
+  stopTimer();
   state.mines = new Set();
   state.megaMineIndex = null;
   state.revealed = new Set();
@@ -505,12 +551,14 @@ function newGame() {
   state.firstClickDone = false;
   state.gameState = "playing";
   state.startTime = null;
+  state.elapsedSeconds = 0;
 
   // Hide the game-over overlay if it was showing
   const overlay = document.getElementById("game-over-overlay");
   if (overlay) overlay.classList.add("hidden");
 
   updateMineCounter();
+  updateTimerDisplay();
   renderBoard();
 }
 

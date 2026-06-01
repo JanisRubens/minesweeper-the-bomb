@@ -26,6 +26,15 @@ h1 {
   margin-bottom: 1.5rem;
 }
 
+/* HUD row: mine counter + timer */
+.hud {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
 /* Mine counter */
 .mine-counter {
   font-size: 1.25rem;
@@ -39,7 +48,23 @@ h1 {
   border-right-color: #ffffff;
   padding: 0.25rem 0.75rem;
   width: max-content;
-  margin: 0 auto 0.75rem;
+  color: #ff0000;
+  letter-spacing: 0.05em;
+}
+
+/* Timer display */
+.timer {
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-family: "Courier New", Courier, monospace;
+  background-color: #c0c0c0;
+  border: 3px solid;
+  border-top-color: #808080;
+  border-left-color: #808080;
+  border-bottom-color: #ffffff;
+  border-right-color: #ffffff;
+  padding: 0.25rem 0.75rem;
+  width: max-content;
   color: #ff0000;
   letter-spacing: 0.05em;
 }
