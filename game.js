@@ -193,6 +193,8 @@ function triggerMegaMineDetonation(megaRow, megaCol) {
 
   state.gameState = "big-explosion";
   console.log("BIG EXPLOSION");
+  revealAllMines();
+  showGameOver("big-explosion");
 }
 
 /**
@@ -219,8 +221,18 @@ function revealCell(row, col) {
       triggerMegaMineDetonation(row, col);
     } else {
       // Regular mine — standard loss
+      const cell = document.querySelector(
+        `.cell[data-row="${row}"][data-col="${col}"]`
+      );
+      if (cell) {
+        cell.classList.add("revealed", "mine-detonated");
+        cell.textContent = "💣";
+      }
+      state.revealed.add(index);
       state.gameState = "loss";
       console.log("game over");
+      revealAllMines();
+      showGameOver("loss");
     }
     return;
   }
@@ -367,6 +379,69 @@ function renderBoard() {
 }
 
 /**
+ * Reveal all mines on the board after game over.
+ * - Unflagged mines are shown as mines (💣).
+ * - The mega-mine (if not already detonated) gets the mega-mine-revealed style with 💥.
+ * - Incorrectly flagged non-mine cells are shown with ✗.
+ */
+function revealAllMines() {
+  // Show all mines that haven't been revealed yet
+  state.mines.forEach((mi) => {
+    if (state.revealed.has(mi)) return; // already shown (detonated cell)
+    const row = Math.floor(mi / COLS);
+    const col = mi % COLS;
+    const cell = document.querySelector(
+      `.cell[data-row="${row}"][data-col="${col}"]`
+    );
+    if (!cell) return;
+
+    if (mi === state.megaMineIndex) {
+      // Mega-mine gets a distinct red highlight + larger icon
+      cell.classList.remove("flagged");
+      cell.classList.add("mega-mine-revealed");
+      cell.textContent = "💥";
+    } else {
+      cell.classList.remove("flagged");
+      cell.classList.add("mine-revealed");
+      cell.textContent = "💣";
+    }
+    state.revealed.add(mi);
+  });
+
+  // Mark incorrectly flagged non-mine cells with ✗
+  state.flagged.forEach((fi) => {
+    if (state.mines.has(fi)) return; // correct flag — leave it
+    const row = Math.floor(fi / COLS);
+    const col = fi % COLS;
+    const cell = document.querySelector(
+      `.cell[data-row="${row}"][data-col="${col}"]`
+    );
+    if (!cell) return;
+    cell.classList.remove("flagged");
+    cell.classList.add("wrong-flag");
+    cell.textContent = "✗";
+  });
+}
+
+/**
+ * Display the game-over overlay with the appropriate message.
+ * @param {"loss"|"big-explosion"} type - which kind of game-over occurred
+ */
+function showGameOver(type) {
+  const overlay = document.getElementById("game-over-overlay");
+  const message = document.getElementById("game-over-message");
+  if (!overlay || !message) return;
+
+  if (type === "big-explosion") {
+    message.textContent = "💥 BIG EXPLOSION! The mega-mine got you.";
+  } else {
+    message.textContent = "BOOM! You hit a mine.";
+  }
+
+  overlay.classList.remove("hidden");
+}
+
+/**
  * Reset the game state and re-render the board.
  * Mines will be placed fresh on the next first click.
  */
@@ -377,8 +452,16 @@ function newGame() {
   state.flagged = new Set();
   state.firstClickDone = false;
   state.gameState = "playing";
+
+  // Hide the game-over overlay if it was showing
+  const overlay = document.getElementById("game-over-overlay");
+  if (overlay) overlay.classList.add("hidden");
+
   updateMineCounter();
   renderBoard();
 }
+
+// Wire up the "Play Again" button
+document.getElementById("play-again-btn").addEventListener("click", newGame);
 
 newGame();
